@@ -13,7 +13,8 @@ with Docker installed:
 ```
 git clone --recursive https://github.com/ahdinosaur/prebuild-cross
 cd prebuild-cross
-npm run example
+git submodule update --init --recursive
+npm run example:leveldown:arm64
 ```
 
 see more example inputs in [`./examples`](./examples)

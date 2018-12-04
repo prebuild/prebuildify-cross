@@ -7,8 +7,10 @@
     "example": "examples"
   },
   "scripts": {
-    "example": "npm run example:leveldown",
-    "example:leveldown": "./build --docker --input examples/leveldown --output output"
+    "example:leveldown:arm": "./build --docker --arch arm --input examples/leveldown --output output",
+    "example:leveldown:arm64": "./build --docker --arch arm64 --input examples/leveldown --output output",
+    "example:sodium-native:arm": "./build --docker --arch arm --input examples/sodium-native --output output",
+    "example:sodium-native:arm64": "./build --docker --arch arm64 --input examples/sodium-native --output output"
   },
   "repository": {
     "type": "git",

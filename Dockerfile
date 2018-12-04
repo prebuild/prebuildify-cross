@@ -5,7 +5,7 @@ ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get -y update && \
   apt-get -y install \
     curl gnupg \
-    libc6-dev build-essential \
+    libc6-dev build-essential libtool \
     libc6-armhf-cross libc6-dev-armhf-cross gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf \
     libc6-arm64-cross libc6-dev-arm64-cross gcc-aarch64-linux-gnu g++-aarch64-linux-gnu \
     && \
@@ -18,4 +18,4 @@ RUN apt-get -y update && \
 
 COPY ./build /app/
 
-VOLUME ["/app/input", "/app/output"]
+VOLUME ["/app/input"]

@@ -79,10 +79,10 @@ case $ARCH in
 #    ;;
 #  armhf)
   arm)
-    $MULTI_ARCH=arm-linux-gnueabihf
+    MULTI_ARCH=arm-linux-gnueabihf
     ;;
   arm64)       
-    $MULTI_ARCH=aarch64-linux-gnu
+    MULTI_ARCH=aarch64-linux-gnu
     ;;
   *)              
 esac 
@@ -132,7 +132,7 @@ else
 
   env -i LC_CTYPE=C.UTF-8 \
     PATH="$PATH" \
-    npm install
+    npm install --ignore-scripts
 
   ${MULTI_ARCH}-gcc -v
 
@@ -149,7 +149,8 @@ else
     RANLIB=${MULTI_ARCH}-ranlib \
     CC=${MULTI_ARCH}-gcc \
     CXX=${MULTI_ARCH}-g++ \
-    ./node_modules/.bin/prebuild --all --arch=${ARCH}
+    ARCH=${ARCH}
+    npm run prebuild -- --arch=${ARCH}
   cp -r "${CWD}/${INPUT}" "${CWD}/${OUTPUT}/${NAME}"
   cd "${CWD}"
 fi
