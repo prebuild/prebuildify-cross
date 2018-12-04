@@ -1,0 +1,3 @@
+[submodule "examples/leveldown"]
+	path = examples/leveldown
+	url = git://github.com/Level/leveldown.git

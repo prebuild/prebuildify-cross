@@ -1,0 +1,4 @@
+/examples
+/output/
+/apt-cacher-ng/
+.git/objects/*

@@ -1,0 +1,155 @@
+#!/bin/bash
+
+ARGUMENTS="$@"
+CWD=$(pwd)
+# https://stackoverflow.com/questions/59895/getting-the-source-directory-of-a-bash-script-from-within
+DIRNAME=$(dirname "$0")
+
+# with help from https://stackoverflow.com/a/29754866,
+
+# saner programming env: these switches turn some bugs into errors
+set -o errexit -o pipefail -o noclobber -o nounset
+
+! getopt --test > /dev/null 
+if [[ ${PIPESTATUS[0]} -ne 4 ]]; then
+    echo "Sorry, `getopt --test` failed in this environment."
+    exit 1
+fi
+
+OPTIONS=hdi:o:n:a
+LONGOPTS=help,docker,input:,output:,name:,arch:
+
+# -use ! and PIPESTATUS to get exit code with errexit set
+# -temporarily store output to be able to check for errors
+# -activate quoting/enhanced mode (e.g. by writing out “--options”)
+# -pass arguments only via   -- "$@"   to separate them correctly
+! PARSED=$(getopt --options=$OPTIONS --longoptions=$LONGOPTS --name "$0" -- "$@")
+if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
+    # e.g. return value is 1
+    #  then getopt has complained about wrong arguments to stdout
+    exit 2
+fi
+# read getopt’s output this way to handle the quoting right:
+eval set -- "$PARSED"
+
+HELP=n DOCKER=n
+INPUT=- OUTPUT=- NAME=- ARCH=-
+while true; do
+    case "$1" in
+        -h|--help)
+            HELP=y
+            shift
+            ;;
+        -d|--docker)
+            DOCKER=y
+            shift
+            ;;
+        -i|--input)
+            INPUT="$2"
+            shift 2
+            ;;
+        -o|--output)
+            OUTPUT="$2"
+            shift 2
+            ;;
+        -n|--name)
+            NAME="$2"
+            shift 2
+            ;;
+        -a|--arch)
+            ARCH="$2"
+            shift 2
+            ;;
+        --)
+            shift
+            break
+            ;;
+        *)
+            echo "Programming error"
+            exit 3
+            ;;
+    esac
+done
+
+MULTI_ARCH=-
+
+case $ARCH in
+#  armel)
+#    $MULTI_ARCH=arm-linux-gnueabi
+#    ;;
+#  armhf)
+  arm)
+    $MULTI_ARCH=arm-linux-gnueabihf
+    ;;
+  arm64)       
+    $MULTI_ARCH=aarch64-linux-gnu
+    ;;
+  *)              
+esac 
+
+if
+  [ "${HELP}" == "y" ] || \
+  [ "${INPUT}" == "-" ] || \
+  [ "${OUTPUT}" == "-" ] || \
+  [ "${ARCH}" == "-" ]
+then
+  cat >&2 <<EOF
+Usage:
+  prebuild-cross [options]
+
+  Arguments:
+
+    --arch <arch>: architecture - either arm or arm64
+    --input <path>: required directory of input image spec
+    --output <path>: required directory to output build results
+    --name <name>: optional name of image
+
+  Flags:
+
+    -h, --help: show this usage
+    -d, --docker: build image using docker
+
+  Examples:
+
+    prebuild-cross --docker --input ./examples/leveldown --output ./output
+EOF
+  exit 1
+fi
+
+if [ "${NAME}" == "-" ]
+then
+  NAME="$(basename "${INPUT}")"
+fi
+
+if [ "${DOCKER}" = "y" ]
+then
+  ./build-docker ${ARGUMENTS}
+else
+  umask 022
+  mkdir -p "${CWD}/${OUTPUT}"
+  rm -rf "${CWD}/${OUTPUT}/${NAME}"
+  cd "${CWD}/${INPUT}"
+
+  env -i LC_CTYPE=C.UTF-8 \
+    PATH="$PATH" \
+    npm install
+
+  ${MULTI_ARCH}-gcc -v
+
+  env -i LC_CTYPE=C.UTF-8 \
+    PATH="$PATH" \
+    SYSROOT=/usr/${MULTI_ARCH}/
+    CPPPATH=/usr/${MULTI_ARCH}/include/
+    LIBPATH=/usr/${MULTI_ARCH}/lib/
+    PKG_CONFIG_PATH=/usr/${MULTI_ARCH}/lib/pkgconfig/
+    AR=${MULTI_ARCH}-ar \
+    AS=${MULTI_ARCH}-as \
+    LD=${MULTI_ARCH}-ld \
+    NM=${MULTI_ARCH}-nm \
+    RANLIB=${MULTI_ARCH}-ranlib \
+    CC=${MULTI_ARCH}-gcc \
+    CXX=${MULTI_ARCH}-g++ \
+    ./node_modules/.bin/prebuild --all --arch=${ARCH}
+  cp -r "${CWD}/${INPUT}" "${CWD}/${OUTPUT}/${NAME}"
+  cd "${CWD}"
+fi
