@@ -3,4 +3,4 @@
 	url = git://github.com/Level/leveldown.git
 [submodule "examples/sodium-native"]
 	path = examples/sodium-native
-	url = git://github.com/sodium-friends/sodium-native.git
+	url = git://github.com/ahdinosaur/sodium-native.git

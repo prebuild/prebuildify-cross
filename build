@@ -71,18 +71,21 @@ while true; do
     esac
 done
 
-MULTI_ARCH=-
+DEBIAN_TRIPLET=-
+GNU_TRIPLET=-
 
 case $ARCH in
 #  armel)
-#    $MULTI_ARCH=arm-linux-gnueabi
+#    $DEBIAN_TRIPLET=arm-linux-gnueabi
 #    ;;
 #  armhf)
   arm)
-    MULTI_ARCH=arm-linux-gnueabihf
+    DEBIAN_TRIPLET=arm-linux-gnueabihf
+    GNU_TRIPLET=arm-linux-gnueabihf
     ;;
   arm64)       
-    MULTI_ARCH=aarch64-linux-gnu
+    DEBIAN_TRIPLET=aarch64-linux-gnu
+    GNU_TRIPLET=aarch64-linux-gnu
     ;;
   *)              
 esac 
@@ -134,22 +137,25 @@ else
     PATH="$PATH" \
     npm install --ignore-scripts
 
-  ${MULTI_ARCH}-gcc -v
+  ${DEBIAN_TRIPLET}-gcc -v
 
   env -i LC_CTYPE=C.UTF-8 \
     PATH="$PATH" \
-    SYSROOT=/usr/${MULTI_ARCH}/
-    CPPPATH=/usr/${MULTI_ARCH}/include/
-    LIBPATH=/usr/${MULTI_ARCH}/lib/
-    PKG_CONFIG_PATH=/usr/${MULTI_ARCH}/lib/pkgconfig/
-    AR=${MULTI_ARCH}-ar \
-    AS=${MULTI_ARCH}-as \
-    LD=${MULTI_ARCH}-ld \
-    NM=${MULTI_ARCH}-nm \
-    RANLIB=${MULTI_ARCH}-ranlib \
-    CC=${MULTI_ARCH}-gcc \
-    CXX=${MULTI_ARCH}-g++ \
-    ARCH=${ARCH}
+    SYSROOT=/usr/${DEBIAN_TRIPLET}/
+    CPPPATH=/usr/${DEBIAN_TRIPLET}/include/
+    LIBPATH=/usr/${DEBIAN_TRIPLET}/lib/
+    PKG_CONFIG_PATH=/usr/${DEBIAN_TRIPLET}/lib/pkgconfig/
+    AR=${DEBIAN_TRIPLET}-ar \
+    AS=${DEBIAN_TRIPLET}-as \
+    LD=${DEBIAN_TRIPLET}-ld \
+    NM=${DEBIAN_TRIPLET}-nm \
+    RANLIB=${DEBIAN_TRIPLET}-ranlib \
+    STRIP=${DEBIAN_TRIPLET}-strip \
+    CC=${DEBIAN_TRIPLET}-gcc \
+    CXX=${DEBIAN_TRIPLET}-g++ \
+    ARCH=${ARCH} \
+    PREBUILD_ARCH=${ARCH} \
+    PREBUILD_CONFIGURE_HOST=${GNU_TRIPLET} \
     npm run prebuild -- --arch=${ARCH}
   cp -r "${CWD}/${INPUT}" "${CWD}/${OUTPUT}/${NAME}"
   cd "${CWD}"
