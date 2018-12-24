@@ -3,12 +3,23 @@
 ARGUMENTS="$@"
 CWD=$(pwd)
 # https://stackoverflow.com/questions/59895/getting-the-source-directory-of-a-bash-script-from-within
-DIRNAME=$(dirname "$0")
+DIRNAME="$(dirname "$(readlink -f "$0")")"
+
+echo args "${ARGUMENTS}"
 
 # with help from https://stackoverflow.com/a/29754866,
 
 # saner programming env: these switches turn some bugs into errors
 set -o errexit -o pipefail -o noclobber -o nounset
+
+DOCKER="docker"
+set +e
+if ! $DOCKER ps >/dev/null; then
+  echo "error connecting to docker:"
+  $DOCKER ps
+  exit 1
+fi
+set -e
 
 ! getopt --test > /dev/null 
 if [[ ${PIPESTATUS[0]} -ne 4 ]]; then
@@ -16,8 +27,8 @@ if [[ ${PIPESTATUS[0]} -ne 4 ]]; then
     exit 1
 fi
 
-OPTIONS=hdi:o:n:a
-LONGOPTS=help,docker,input:,output:,name:,arch:
+OPTIONS=hi:o:t:n:
+LONGOPTS=help,input:,output:,target:,name:
 
 # -use ! and PIPESTATUS to get exit code with errexit set
 # -temporarily store output to be able to check for errors
@@ -32,16 +43,13 @@ fi
 # read getopt’s output this way to handle the quoting right:
 eval set -- "$PARSED"
 
-HELP=n DOCKER=n
-INPUT=- OUTPUT=- NAME=- ARCH=-
+HELP=n 
+INPUT=- OUTPUT=- TARGET=-
+NAME=- 
 while true; do
     case "$1" in
         -h|--help)
             HELP=y
-            shift
-            ;;
-        -d|--docker)
-            DOCKER=y
             shift
             ;;
         -i|--input)
@@ -52,12 +60,12 @@ while true; do
             OUTPUT="$2"
             shift 2
             ;;
-        -n|--name)
-            NAME="$2"
+        -t|--target)
+            TARGET="$2"
             shift 2
             ;;
-        -a|--arch)
-            ARCH="$2"
+        -n|--name)
+            NAME="$2"
             shift 2
             ;;
         --)
@@ -71,30 +79,11 @@ while true; do
     esac
 done
 
-DEBIAN_TRIPLET=-
-GNU_TRIPLET=-
-
-case $ARCH in
-#  armel)
-#    $DEBIAN_TRIPLET=arm-linux-gnueabi
-#    ;;
-#  armhf)
-  arm)
-    DEBIAN_TRIPLET=arm-linux-gnueabihf
-    GNU_TRIPLET=arm-linux-gnueabihf
-    ;;
-  arm64)       
-    DEBIAN_TRIPLET=aarch64-linux-gnu
-    GNU_TRIPLET=aarch64-linux-gnu
-    ;;
-  *)              
-esac 
-
 if
   [ "${HELP}" == "y" ] || \
   [ "${INPUT}" == "-" ] || \
   [ "${OUTPUT}" == "-" ] || \
-  [ "${ARCH}" == "-" ]
+  [ "${TARGET}" == "-" ]
 then
   cat >&2 <<EOF
 Usage:
@@ -102,19 +91,19 @@ Usage:
 
   Arguments:
 
-    --arch <arch>: architecture - either arm or arm64
-    --input <path>: required directory of input image spec
-    --output <path>: required directory to output build results
-    --name <name>: optional name of image
+    --input <path>: **required** directory of input image spec
+    --output <path>: **required** directory to output build results
+    --target <target>: **required** cross-compilation target 
+        (see https://github.com/dockcross/dockcross#cross-compilers)
+    --name <name>: _optional_ name of image
 
   Flags:
 
     -h, --help: show this usage
-    -d, --docker: build image using docker
 
   Examples:
 
-    prebuild-cross --docker --input ./examples/leveldown --output ./output
+    prebuild-cross --input ./examples/leveldown --output ./output
 EOF
   exit 1
 fi
@@ -124,39 +113,102 @@ then
   NAME="$(basename "${INPUT}")"
 fi
 
-if [ "${DOCKER}" = "y" ]
-then
-  ./build-docker ${ARGUMENTS}
-else
-  umask 022
-  mkdir -p "${CWD}/${OUTPUT}"
-  rm -rf "${CWD}/${OUTPUT}/${NAME}"
-  cd "${CWD}/${INPUT}"
+case "${TARGET}" in
+  "android-arm")
+    ARCH="arm"
+    PLATFORM="android"
+    ;;
+  "android-arm64")
+    ARCH="arm64"
+    PLATFORM="android"
+    ;;
 
-  env -i LC_CTYPE=C.UTF-8 \
-    PATH="$PATH" \
-    npm install --ignore-scripts
+  "linux-arm64")
+    ARCH="arm64"
+    PLATFORM="linux"
+    ;;
+  "linux-armv5"|"linux-armv6"|"linux-armv7")
+    ARCH="arm"
+    PLATFORM="linux"
+    ;;
 
-  ${DEBIAN_TRIPLET}-gcc -v
+  "linux-x64")
+    ARCH="x64"
+    PLATFORM="linux"
+    ;;
+  "linux-x86")
+    ARCH="x32"
+    PLATFORM="linux"
+    ;;
 
-  env -i LC_CTYPE=C.UTF-8 \
-    PATH="$PATH" \
-    SYSROOT=/usr/${DEBIAN_TRIPLET}/
-    CPPPATH=/usr/${DEBIAN_TRIPLET}/include/
-    LIBPATH=/usr/${DEBIAN_TRIPLET}/lib/
-    PKG_CONFIG_PATH=/usr/${DEBIAN_TRIPLET}/lib/pkgconfig/
-    AR=${DEBIAN_TRIPLET}-ar \
-    AS=${DEBIAN_TRIPLET}-as \
-    LD=${DEBIAN_TRIPLET}-ld \
-    NM=${DEBIAN_TRIPLET}-nm \
-    RANLIB=${DEBIAN_TRIPLET}-ranlib \
-    STRIP=${DEBIAN_TRIPLET}-strip \
-    CC=${DEBIAN_TRIPLET}-gcc \
-    CXX=${DEBIAN_TRIPLET}-g++ \
-    ARCH=${ARCH} \
-    PREBUILD_ARCH=${ARCH} \
-    PREBUILD_CONFIGURE_HOST=${GNU_TRIPLET} \
-    npm run prebuild -- --arch=${ARCH}
-  cp -r "${CWD}/${INPUT}" "${CWD}/${OUTPUT}/${NAME}"
-  cd "${CWD}"
+  "windows-x64")
+    ARCH="x64"
+    PLATFORM="windows"
+    ;;
+  "windows-x86")
+    ARCH="x32"
+    PLATFORM="windows"
+    ;;
+
+  *)
+    echo "unknown target!" "${TARGET}"
+    exit 2
+    ;;
+esac
+
+IMAGE_NAME=${BASE_IMAGE_NAME:-prebuild-cross}
+CONTAINER_NAME=${CONTAINER_NAME:-prebuild-cross-work-${TARGET}}
+
+# CONTAINER_RUNNING=$($DOCKER ps --filter name="$CONTAINER_NAME" -q)
+CONTAINER_RUNNING=
+if [ "$CONTAINER_RUNNING" != "" ]; then
+  echo "the build is already running in container $CONTAINER_NAME. abort!"
+  exit 1
 fi
+
+CONTAINER_EXISTS=$($DOCKER ps -a --filter name="$CONTAINER_NAME" -q)
+if [ "$CONTAINER_EXISTS" != "" ]; then
+  $DOCKER rm -v "${CONTAINER_NAME}"
+fi
+
+function cleanup {
+  echo 'got EXIT signal... please wait'
+
+  CONTAINER_RUNNING=$($DOCKER ps --filter name="${CONTAINER_NAME}" -q)
+  if [ "${CONTAINER_RUNNING}" != "" ]; then
+    $DOCKER stop ${CONTAINER_NAME} > /dev/null
+  fi
+
+  CONTAINER_EXISTS=$($DOCKER ps -a --filter name="${CONTAINER_NAME}" -q)
+  if [ "${CONTAINER_EXISTS}" != "" ]; then
+    $DOCKER rm -v ${CONTAINER_NAME} > /dev/null
+  fi
+}
+
+trap cleanup EXIT
+
+# build target image
+$DOCKER build \
+  --build-arg TARGET="${TARGET}" \
+  -t ${IMAGE_NAME}:${TARGET} \
+  ${DIRNAME}
+
+$DOCKER run \
+  --name "${CONTAINER_NAME}" \
+  -v "${CWD}/${INPUT}:/app/input" \
+  --env NAME="${NAME}" \
+  --env ARCH="${ARCH}" \
+  --env PREBUILD_ARCH="${ARCH}" \
+  --env PREBUILD_PLATFORM="${PLATFORM}" \
+  ${IMAGE_NAME}:${TARGET} \
+  bash -e -o errexit -o pipefail -o noclobber -o nounset -c "
+    cd /app; ./build-in-docker ${ARGUMENTS};
+  "
+time $DOCKER logs "${CONTAINER_NAME}" --follow || true &
+wait "$!"
+
+echo "copying results from output/"
+$DOCKER cp "${CONTAINER_NAME}":/app/output/. "${OUTPUT}"
+ls -lah output
+
+echo "Done! Your image(s) should be in output/"
