@@ -1,30 +1,24 @@
 {
-  "name": "debian-image-builder",
+  "name": "prebuildify-cross",
   "version": "1.0.1",
-  "description": "build Debian disk images (with Docker)",
+  "description": "cross-compile prebuilds",
   "bin": "./build",
   "directories": {
     "example": "examples"
   },
   "scripts": {
-    "example:leveldown:arm": "./build --docker --arch arm --input examples/leveldown --output output",
-    "example:leveldown:arm64": "./build --docker --arch arm64 --input examples/leveldown --output output",
-    "example:sodium-native:arm": "./build --docker --arch arm --input examples/sodium-native --output output",
-    "example:sodium-native:arm64": "./build --docker --arch arm64 --input examples/sodium-native --output output"
+    "example:leveldown:linux-armv7": "./build --target linux-armv7 --input examples/leveldown --output output",
+    "example:sodium-native:arm": "./build --target linux-armv7 --input examples/sodium-native --output output"
   },
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/ahdinosaur/debian-image-builder.git"
+    "url": "git+ssh://git@github.com/ahdinosaur/prebuildify-cross.git"
   },
-  "keywords": [
-    "debian",
-    "vmdb2",
-    "vmdebootrap"
-  ],
+  "keywords": [],
   "author": "ahdinosaur",
   "license": "GPL-3.0",
   "bugs": {
-    "url": "https://github.com/ahdinosaur/debian-image-builder/issues"
+    "url": "https://github.com/ahdinosaur/prebuildify-cross/issues"
   },
-  "homepage": "https://github.com/ahdinosaur/debian-image-builder#readme"
+  "homepage": "https://github.com/ahdinosaur/prebuildify-cross#readme"
 }

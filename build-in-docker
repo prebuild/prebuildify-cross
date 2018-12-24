@@ -1,0 +1,18 @@
+#!/bin/bash
+
+CWD=$(pwd)
+
+# saner programming env: these switches turn some bugs into errors
+set -o errexit -o pipefail -o noclobber -o nounset
+
+umask 022
+
+cp -r "${CWD}/input" "${CWD}/work"
+
+cd "${CWD}/work"
+
+npm install --ignore-scripts
+
+npm run prebuild
+
+cp -r "${CWD}/work/prebuilds" "${CWD}/output/"

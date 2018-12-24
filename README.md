@@ -1,6 +1,6 @@
-# prebuild-cross
+# prebuildify-cross
 
-cross-compile [prebuild](https://github.com/prebuild/prebuild)s
+cross-compile [prebuild](https://github.com/mafintosh/prebuildify)s
 
 ## background
 
@@ -11,8 +11,8 @@ i want to build native modules for [Scuttlebutt](https://scuttlebutt.nz) pubs, t
 with Docker installed:
 
 ```
-git clone --recursive https://github.com/ahdinosaur/prebuild-cross
-cd prebuild-cross
+git clone --recursive https://github.com/ahdinosaur/prebuildify-cross
+cd prebuildify-cross
 git submodule update --init --recursive
 npm run example:leveldown:arm64
 ```
