@@ -169,11 +169,9 @@ esac
 IMAGE_NAME=${BASE_IMAGE_NAME:-prebuild-cross}
 CONTAINER_NAME=${CONTAINER_NAME:-prebuild-cross-work-${TARGET}}
 
-# CONTAINER_RUNNING=$($DOCKER ps --filter name="$CONTAINER_NAME" -q)
-CONTAINER_RUNNING=
+CONTAINER_RUNNING=$($DOCKER ps --filter name="$CONTAINER_NAME" -q)
 if [ "$CONTAINER_RUNNING" != "" ]; then
-  echo "the build is already running in container $CONTAINER_NAME. abort!"
-  exit 1
+  $DOCKER stop ${CONTAINER_NAME} > /dev/null
 fi
 
 CONTAINER_EXISTS=$($DOCKER ps -a --filter name="$CONTAINER_NAME" -q)
