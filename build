@@ -203,6 +203,7 @@ $DOCKER build \
 
 $DOCKER run \
   --name "${CONTAINER_NAME}" \
+  -d \
   -v "${INPUT}:/app/input" \
   --env NAME="${NAME}" \
   --env ARCH="${ARCH}" \
