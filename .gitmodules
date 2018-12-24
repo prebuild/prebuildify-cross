@@ -1,6 +1,0 @@
-[submodule "examples/leveldown"]
-	path = examples/leveldown
-	url = git://github.com/Level/leveldown.git
-[submodule "examples/sodium-native"]
-	path = examples/sodium-native
-	url = git://github.com/ahdinosaur/sodium-native.git

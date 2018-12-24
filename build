@@ -5,8 +5,6 @@ CWD=$(pwd)
 # https://stackoverflow.com/questions/59895/getting-the-source-directory-of-a-bash-script-from-within
 DIRNAME="$(dirname "$(readlink -f "$0")")"
 
-echo args "${ARGUMENTS}"
-
 # with help from https://stackoverflow.com/a/29754866,
 
 # saner programming env: these switches turn some bugs into errors
@@ -102,7 +100,7 @@ Usage:
 
   Examples:
 
-    prebuild-cross --input ./examples/leveldown --output ./output
+    prebuild-cross --target linux-armv7
 EOF
   exit 1
 fi
