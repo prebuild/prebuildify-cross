@@ -44,7 +44,8 @@ fi
 eval set -- "$PARSED"
 
 HELP=n 
-INPUT=- OUTPUT=- TARGET=-
+TARGET=-
+INPUT="${CWD}" OUTPUT=prebuilds
 NAME=- 
 while true; do
     case "$1" in
@@ -81,8 +82,6 @@ done
 
 if
   [ "${HELP}" == "y" ] || \
-  [ "${INPUT}" == "-" ] || \
-  [ "${OUTPUT}" == "-" ] || \
   [ "${TARGET}" == "-" ]
 then
   cat >&2 <<EOF
@@ -91,10 +90,10 @@ Usage:
 
   Arguments:
 
-    --input <path>: **required** directory of input image spec
-    --output <path>: **required** directory to output build results
     --target <target>: **required** cross-compilation target 
         (see https://github.com/dockcross/dockcross#cross-compilers)
+    --input <path>: _optional_ directory of input image spec (default: cwd)
+    --output <path>: _optional_ directory to output build results (default: prebuilds)
     --name <name>: _optional_ name of image
 
   Flags:
@@ -107,6 +106,19 @@ Usage:
 EOF
   exit 1
 fi
+
+if [[ "${INPUT}" != /* ]]
+then
+  INPUT="${CWD}/${INPUT}"
+fi
+
+if [[ "${OUTPUT}" != /* ]]
+then
+  OUTPUT="${CWD}/${OUTPUT}"
+fi
+
+echo input $INPUT
+echo output $OUTPUT
 
 if [ "${NAME}" == "-" ]
 then
@@ -195,7 +207,7 @@ $DOCKER build \
 
 $DOCKER run \
   --name "${CONTAINER_NAME}" \
-  -v "${CWD}/${INPUT}:/app/input" \
+  -v "${INPUT}:/app/input" \
   --env NAME="${NAME}" \
   --env ARCH="${ARCH}" \
   --env PREBUILD_ARCH="${ARCH}" \
@@ -209,6 +221,6 @@ wait "$!"
 
 echo "copying results from output/"
 $DOCKER cp "${CONTAINER_NAME}":/app/output/. "${OUTPUT}"
-ls -lah output
+ls -lah "${OUTPUT}"
 
-echo "Done! Your image(s) should be in output/"
+echo "Done! Your prebuilds should be in ${OUTPUT}"

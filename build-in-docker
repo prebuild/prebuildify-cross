@@ -15,4 +15,4 @@ npm install --ignore-scripts
 
 npm run prebuild
 
-cp -r "${CWD}/work" "${CWD}/output/${NAME}"
+cp -r "${CWD}/work/prebuilds" "${CWD}/output/"
