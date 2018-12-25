@@ -4,21 +4,57 @@ cross-compile [prebuild](https://github.com/mafintosh/prebuildify)s
 
 ## background
 
-i want to build native modules for [Scuttlebutt](https://scuttlebutt.nz) pubs, to use on Arm Linux devices like the Raspberry Pi.
+i want to build native modules for [Scuttlebutt](https://scuttlebutt.nz) pubs, to use on ARM Linux devices like the Raspberry Pi. meanwhile, i also want to support mobile ARM devices like Android.
 
-## install
+## how does it work?
 
-```
-npm install -g prebuild-cross
-```
+`prebuildify-cross` will:
 
-and you need Docker installed.
+- build a Docker image for your intended target, based on the respective [`dockcross`](https://github.com/dockcross/dockcross) image
+- create a Docker container with your input (default is `.`) mounted inside
+- run `npm install --no-scripts` and `npm run prebuild`
+- copy out `./prebuilds` from the container to your output (default is `./prebuilds`)
 
 ## usage
 
+(note: `prebuildify-cross` depends on having Docker installed.)
+
+in the module you want to cross-compile prebuilds,
+
+ensure you have an npm script `prebuild`, like:
+
+```
+{
+  "scripts": {
+    "prebuild": "prebuildify --all --strip"
+  }
+}
+```
+
+then install `prebuild-cross` as a dev-dependency:
+
+```
+npm install --save-dev prebuild-cross
+```
+
+then add new `prebuild:cross:${TARGET}` scripts for the targets you want to support:
+
+```
+{
+  "scripts": {
+    "prebuild:cross:linux-armv7": "prebuildify-cross --target linux-armv7",
+    "prebuild:cross:android-arm": "prebuildify-cross --target android-arm"
+  }
+}
+```
+
+then when you want to cross-compile prebuilds, `npm run` the appropriate script.
+
+for the full command-line usage:
+
 ```
 Usage:
-  prebuild-cross [options]
+  prebuildify-cross [options]
 
   Arguments:
 
@@ -34,8 +70,9 @@ Usage:
 
   Examples:
 
-    prebuild-cross --target linux-armv7
+    prebuildify-cross --target linux-armv7
 ```
+
 
 ## references
 

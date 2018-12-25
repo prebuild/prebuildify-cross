@@ -84,7 +84,7 @@ if
 then
   cat >&2 <<EOF
 Usage:
-  prebuild-cross [options]
+  prebuildify-cross [options]
 
   Arguments:
 
@@ -100,7 +100,7 @@ Usage:
 
   Examples:
 
-    prebuild-cross --target linux-armv7
+    prebuildify-cross --target linux-armv7
 EOF
   exit 1
 fi
@@ -166,8 +166,8 @@ case "${TARGET}" in
     ;;
 esac
 
-IMAGE_NAME=${BASE_IMAGE_NAME:-prebuild-cross}
-CONTAINER_NAME=${CONTAINER_NAME:-prebuild-cross-work-${TARGET}}
+IMAGE_NAME=${BASE_IMAGE_NAME:-prebuildify-cross}
+CONTAINER_NAME=${CONTAINER_NAME:-prebuildify-cross-work-${TARGET}}
 
 CONTAINER_RUNNING=$($DOCKER ps --filter name="$CONTAINER_NAME" -q)
 if [ "$CONTAINER_RUNNING" != "" ]; then
