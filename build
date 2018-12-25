@@ -25,8 +25,8 @@ if [[ ${PIPESTATUS[0]} -ne 4 ]]; then
     exit 1
 fi
 
-OPTIONS=hi:o:t:n:
-LONGOPTS=help,input:,output:,target:,name:
+OPTIONS=hi:o:
+LONGOPTS=help,input:,output:,arch:,arm-version:,platform:
 
 # -use ! and PIPESTATUS to get exit code with errexit set
 # -temporarily store output to be able to check for errors
@@ -42,9 +42,8 @@ fi
 eval set -- "$PARSED"
 
 HELP=n 
-TARGET=-
+ARCH= ARM_VERSION= PLATFORM=
 INPUT="${CWD}" OUTPUT=prebuilds
-NAME=- 
 while true; do
     case "$1" in
         -h|--help)
@@ -59,12 +58,16 @@ while true; do
             OUTPUT="$2"
             shift 2
             ;;
-        -t|--target)
-            TARGET="$2"
+        --arch)
+            ARCH="$2"
             shift 2
             ;;
-        -n|--name)
-            NAME="$2"
+        --arm-version)
+            ARM_VERSION="$2"
+            shift 2
+            ;;
+        --platform)
+            PLATFORM="$2"
             shift 2
             ;;
         --)
@@ -80,7 +83,11 @@ done
 
 if
   [ "${HELP}" == "y" ] || \
-  [ "${TARGET}" == "-" ]
+  [ "${ARCH}" == "" ] || \
+  !( [ "${ARCH}" != "x32" ] && [ "${ARCH}" != "x64" ] && [ "${ARCH}" != "arm" ] && [ "${ARCH}" != "arm64" ] ) || \
+  [ "${PLATFORM}" == "" ] || \
+  !( [ "${PLATFORM}" != "android" ] && [ "${PLATFORM}" != "linux" ] ) || \
+  [ "${ARCH}" == "arm" ] && [ "${ARM_VERSION}" == "" ]
 then
   cat >&2 <<EOF
 Usage:
@@ -88,11 +95,12 @@ Usage:
 
   Arguments:
 
-    --target <target>: **required** cross-compilation target 
-        (see https://github.com/dockcross/dockcross#cross-compilers)
+    --arch <arch>: **required** architecture (supported: x32, x64, arm, arm64)
+    --arm-version <version>: if using arm architecture, **required* arm version (supported: 5, 6, 7, 8)
+    --platform: **required** platform (supported: linux, android)
+
     --input <path>: _optional_ directory of input image spec (default: cwd)
     --output <path>: _optional_ directory to output build results (default: prebuilds)
-    --name <name>: _optional_ name of image
 
   Flags:
 
@@ -100,7 +108,15 @@ Usage:
 
   Examples:
 
-    prebuildify-cross --target linux-armv7
+    prebuildify-cross --platform linux --arch x64
+
+    prebuildify-cross --platform linux --arch arm --arm-version 7
+
+    prebuildify-cross --platform linux --arch arm64
+
+    prebuildify-cross --platform android --arch arm --arm-version 7
+
+    prebuildify-cross --platform android --arch arm64
 EOF
   exit 1
 fi
@@ -118,55 +134,62 @@ fi
 echo input $INPUT
 echo output $OUTPUT
 
-if [ "${NAME}" == "-" ]
+if [ "${ARM_VERSION}" == "8" ]
 then
-  NAME="$(basename "${INPUT}")"
+  ARCH=arm64
 fi
 
-case "${TARGET}" in
-  "android-arm")
-    ARCH="arm"
-    PLATFORM="android"
-    ;;
-  "android-arm64")
-    ARCH="arm64"
-    PLATFORM="android"
-    ;;
+if [ "${ARCH}" == "arm64" ]
+then
+  ARM_VERSION=8
+fi
 
-  "linux-arm64")
-    ARCH="arm64"
-    PLATFORM="linux"
-    ;;
-  "linux-armv5"|"linux-armv6"|"linux-armv7")
-    ARCH="arm"
-    PLATFORM="linux"
-    ;;
+function not_supported () {
+  if [ "${ARM_VERSION}" == "" ]
+  then
+    echo "platform=${PLATFORM}, arch=${ARCH}: not supported!"
+  else
+    echo "platform=${PLATFORM}, arch=${ARCH}, arm_version=${ARM_VERSION}: not supported!"
+  fi
+  exit 1
+}
 
-  "linux-x64")
-    ARCH="x64"
-    PLATFORM="linux"
+case "${PLATFORM}" in
+  "android")
+    case "${ARM_VERSION}" in
+      6|7)
+        TARGET=android-arm
+        ;;
+      8)
+        TARGET=android-arm64
+        ;;
+      *)
+        not_supported
+        ;;
+    esac
     ;;
-  "linux-x86")
-    ARCH="x32"
-    PLATFORM="linux"
+  "linux")
+    case "${ARM_VERSION}" in
+      5|6|7)
+        TARGET="linux-armv${ARM_VERSION}"
+        ;;
+      8)
+        TARGET=linux-arm64
+        ;;
+      "")
+        TARGET=linux-${ARCH}
+        ;;
+      *)
+        not_supported
+        ;;
+    esac
     ;;
-
-  "windows-x64")
-    ARCH="x64"
-    PLATFORM="win32"
-    ;;
-  "windows-x86")
-    ARCH="x32"
-    PLATFORM="win32"
-    ;;
-
   *)
-    echo "unknown target!" "${TARGET}"
-    exit 2
+    not_supported
     ;;
 esac
 
-IMAGE_NAME=${BASE_IMAGE_NAME:-prebuildify-cross}
+IMAGE_NAME=${IMAGE_NAME:-prebuildify-cross}
 CONTAINER_NAME=${CONTAINER_NAME:-prebuildify-cross-work-${TARGET}}
 
 CONTAINER_RUNNING=$($DOCKER ps --filter name="$CONTAINER_NAME" -q)
@@ -195,6 +218,11 @@ function cleanup {
 
 trap cleanup EXIT
 
+echo ARCH "${ARCH}"
+echo ARM_VERSION "${ARM_VERSION}"
+echo PLATFORM "${PLATFORM}"
+echo TARGET "${TARGET}"
+
 # build target image
 $DOCKER build \
   --build-arg TARGET="${TARGET}" \
@@ -205,11 +233,9 @@ $DOCKER run \
   --name "${CONTAINER_NAME}" \
   -d \
   -v "${INPUT}:/app/input" \
-  --env NAME="${NAME}" \
   --env ARCH="${ARCH}" \
+  --env ARM_VERSION="${ARM_VERSION}" \
   --env PLATFORM="${PLATFORM}" \
-  --env PREBUILD_ARCH="${ARCH}" \
-  --env PREBUILD_PLATFORM="${PLATFORM}" \
   ${IMAGE_NAME}:${TARGET} \
   bash -e -o errexit -o pipefail -o noclobber -o nounset -c "
     cd /app; ./build-in-docker ${ARGUMENTS};
