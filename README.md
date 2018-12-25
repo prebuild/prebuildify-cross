@@ -43,10 +43,10 @@ ensure you have an npm script `prebuild`, like:
 }
 ```
 
-then install `prebuild-cross` as a dev-dependency:
+then install `prebuildify-cross` as a dev-dependency:
 
 ```
-npm install --save-dev prebuild-cross
+npm install --save-dev prebuildify-cross
 ```
 
 then add new `prebuild:cross:${TARGET}` scripts for the targets you want to support:
@@ -103,7 +103,7 @@ Usage:
 - [Arm options](https://gcc.gnu.org/onlinedocs/gcc/ARM-Options.html)
 - [Rust cross-compiling tutorial](https://github.com/japaric/rust-cross)
 - [Rust cross-compilation tool](https://github.com/rust-embedded/cross)
-- [`leveldown` cross-compilation[(https://github.com/Level/leveldown/pull/572)
+- [`leveldown` cross-compilation discussion](https://github.com/Level/leveldown/pull/572)
 
 ## license
 
