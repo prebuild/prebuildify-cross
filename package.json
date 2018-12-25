@@ -1,6 +1,6 @@
 {
   "name": "prebuildify-cross",
-  "version": "2.0.3",
+  "version": "2.0.4",
   "description": "cross-compile prebuilds",
   "bin": "./build",
   "directories": {
