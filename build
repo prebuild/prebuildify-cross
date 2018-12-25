@@ -153,11 +153,11 @@ case "${TARGET}" in
 
   "windows-x64")
     ARCH="x64"
-    PLATFORM="windows"
+    PLATFORM="win32"
     ;;
   "windows-x86")
     ARCH="x32"
-    PLATFORM="windows"
+    PLATFORM="win32"
     ;;
 
   *)
@@ -207,6 +207,7 @@ $DOCKER run \
   -v "${INPUT}:/app/input" \
   --env NAME="${NAME}" \
   --env ARCH="${ARCH}" \
+  --env PLATFORM="${PLATFORM}" \
   --env PREBUILD_ARCH="${ARCH}" \
   --env PREBUILD_PLATFORM="${PLATFORM}" \
   ${IMAGE_NAME}:${TARGET} \
