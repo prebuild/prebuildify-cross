@@ -208,8 +208,6 @@ $DOCKER run \
   --env NAME="${NAME}" \
   --env ARCH="${ARCH}" \
   --env PLATFORM="${PLATFORM}" \
-  --env PREBUILD_ARCH="${ARCH}" \
-  --env PREBUILD_PLATFORM="${PLATFORM}" \
   ${IMAGE_NAME}:${TARGET} \
   bash -e -o errexit -o pipefail -o noclobber -o nounset -c "
     cd /app; ./build-in-docker ${ARGUMENTS};
