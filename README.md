@@ -94,6 +94,11 @@ Usage:
     prebuildify-cross --platform android --arch arm64
 ```
 
+you can also pass in environment variables instead of command-line arguments, e.g.
+
+```shell
+PLATFORM=linux ARCH=arm ARM_VERSION=7 prebuildify-cross
+```
 
 ## references
 

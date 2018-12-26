@@ -42,7 +42,7 @@ fi
 eval set -- "$PARSED"
 
 HELP=n 
-ARCH= ARM_VERSION= PLATFORM=
+ARCH=${ARCH:-} ARM_VERSION=${ARM_VERSION:-} PLATFORM=${PLATFORM:-}
 INPUT="${CWD}" OUTPUT=prebuilds
 while true; do
     case "$1" in
