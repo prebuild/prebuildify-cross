@@ -23,7 +23,6 @@ i want to build native modules for [Scuttlebutt](https://scuttlebutt.nz) pubs, t
 - `prebuildify-cross --platform=linux --arch=arm --arm-version=6`
 - `prebuildify-cross --platform=linux --arch=arm --arm-version=7`
 - `prebuildify-cross --platform=linux --arch=arm64`
-- `prebuildify-cross --platform=android --arch=arm --arm-version=6`
 - `prebuildify-cross --platform=android --arch=arm --arm-version=7`
 - `prebuildify-cross --platform=android --arch=arm64`
 
