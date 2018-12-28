@@ -1,5 +1,6 @@
 #!/bin/bash
 
+ARGUMENTS="$@"
 CWD=$(pwd)
 
 # saner programming env: these switches turn some bugs into errors
@@ -13,6 +14,6 @@ cd "${CWD}/work"
 
 npm install --ignore-scripts
 
-npm run prebuild
+PATH="$(npm bin):$PATH" prebuildify $ARGUMENTS
 
 cp -r "${CWD}/work/prebuilds" "${CWD}/output/"
