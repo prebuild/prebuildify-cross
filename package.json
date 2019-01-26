@@ -17,8 +17,5 @@
   "bugs": {
     "url": "https://github.com/ahdinosaur/prebuildify-cross/issues"
   },
-  "homepage": "https://github.com/ahdinosaur/prebuildify-cross#readme",
-  "peerDependencies": {
-    "prebuildify": "*"
-  }
+  "homepage": "https://github.com/ahdinosaur/prebuildify-cross#readme"
 }
