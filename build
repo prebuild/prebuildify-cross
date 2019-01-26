@@ -28,7 +28,7 @@ if [[ ${PIPESTATUS[0]} -ne 4 ]]; then
 fi
 
 OPTIONS=hi:o:
-LONGOPTS=help,input:,output:,arch:,arm-version:,platform:,args:
+LONGOPTS=help,input:,output:,arch:,arm-version:,platform:
 
 # -use ! and PIPESTATUS to get exit code with errexit set
 # -temporarily store output to be able to check for errors
