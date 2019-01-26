@@ -244,7 +244,7 @@ $DOCKER run \
   -v "${INPUT}:/app/input" \
   --env ARCH="${ARCH}" \
   --env ARM_VERSION="${ARM_VERSION}" \
-  --env PLATFORM="${PLATFORM}" \
+  --env TARGET_PLATFORM="${PLATFORM}" \
   ${IMAGE_NAME}:${TARGET} \
   bash -e -o errexit -o pipefail -o noclobber -o nounset -c "
     cd /app; ./build-in-docker ${ARGS};
