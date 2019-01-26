@@ -73,12 +73,9 @@ while true; do
             PLATFORM="$2"
             shift 2
             ;;
-        --args)
-            ARGS="$2"
-            shift 2
-            ;;
         --)
             shift
+            ARGS="$@"
             break
             ;;
         *)
