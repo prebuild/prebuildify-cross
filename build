@@ -90,7 +90,7 @@ if
   [ "${ARCH}" == "" ] || \
   ( [ "${ARCH}" != "x32" ] && [ "${ARCH}" != "x64" ] && [ "${ARCH}" != "arm" ] && [ "${ARCH}" != "arm64" ] ) || \
   [ "${PLATFORM}" == "" ] || \
-  !( [ "${PLATFORM}" != "android" ] && [ "${PLATFORM}" != "linux" ] ) || \
+  ( [ "${PLATFORM}" != "android" ] && [ "${PLATFORM}" != "linux" ] ) || \
   [ "${ARCH}" == "arm" ] && [ "${ARM_VERSION}" == "" ]
 then
   cat >&2 <<EOF
