@@ -6,10 +6,7 @@
   "directories": {
     "example": "examples"
   },
-  "scripts": {
-    "example:leveldown:linux-armv7": "./build --target linux-armv7 --input examples/leveldown --output output",
-    "example:sodium-native:arm": "./build --target linux-armv7 --input examples/sodium-native --output output"
-  },
+  "scripts": {},
   "repository": {
     "type": "git",
     "url": "git+ssh://git@github.com/ahdinosaur/prebuildify-cross.git"

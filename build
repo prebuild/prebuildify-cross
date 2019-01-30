@@ -1,6 +1,5 @@
 #!/bin/bash
 
-ARGUMENTS="$@"
 CWD=$(pwd)
 # https://stackoverflow.com/questions/59895/getting-the-source-directory-of-a-bash-script-from-within
 DIRNAME="$(dirname "$(readlink -f "$0")")"
@@ -46,6 +45,7 @@ eval set -- "$PARSED"
 
 HELP=n 
 ARCH=${ARCH:-} ARM_VERSION=${ARM_VERSION:-} PLATFORM=${PLATFORM:-}
+ARGS=""
 INPUT="${CWD}" OUTPUT=prebuilds
 while true; do
     case "$1" in
@@ -75,6 +75,7 @@ while true; do
             ;;
         --)
             shift
+            ARGS="$@"
             break
             ;;
         *)
@@ -87,9 +88,9 @@ done
 if
   [ "${HELP}" == "y" ] || \
   [ "${ARCH}" == "" ] || \
-  !( [ "${ARCH}" != "x32" ] && [ "${ARCH}" != "x64" ] && [ "${ARCH}" != "arm" ] && [ "${ARCH}" != "arm64" ] ) || \
+  ( [ "${ARCH}" != "x32" ] && [ "${ARCH}" != "x64" ] && [ "${ARCH}" != "arm" ] && [ "${ARCH}" != "arm64" ] ) || \
   [ "${PLATFORM}" == "" ] || \
-  !( [ "${PLATFORM}" != "android" ] && [ "${PLATFORM}" != "linux" ] ) || \
+  ( [ "${PLATFORM}" != "android" ] && [ "${PLATFORM}" != "linux" ] ) || \
   [ "${ARCH}" == "arm" ] && [ "${ARM_VERSION}" == "" ]
 then
   cat >&2 <<EOF
@@ -192,6 +193,8 @@ case "${PLATFORM}" in
     ;;
 esac
 
+echo args $ARGS
+
 IMAGE_NAME=${IMAGE_NAME:-prebuildify-cross}
 CONTAINER_NAME=${CONTAINER_NAME:-prebuildify-cross-work-${TARGET}}
 
@@ -238,10 +241,10 @@ $DOCKER run \
   -v "${INPUT}:/app/input" \
   --env ARCH="${ARCH}" \
   --env ARM_VERSION="${ARM_VERSION}" \
-  --env PLATFORM="${PLATFORM}" \
+  --env TARGET_PLATFORM="${PLATFORM}" \
   ${IMAGE_NAME}:${TARGET} \
   bash -e -o errexit -o pipefail -o noclobber -o nounset -c "
-    cd /app; ./build-in-docker ${ARGUMENTS};
+    cd /app; ./build-in-docker ${ARGS};
   "
 time $DOCKER logs "${CONTAINER_NAME}" --follow || true &
 wait "$!"
