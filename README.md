@@ -1,105 +1,68 @@
 # prebuildify-cross
 
-cross-compile [prebuild](https://github.com/mafintosh/prebuildify)s
+**Compile prebuilds in Docker, supporting Linux (including Debian 8, Ubuntu 14.04, RHEL 7, CentOS 7 and up), Alpine Linux, ARM Linux devices like the Raspberry Pi and mobile ARM devices like Android.**
 
-## background
+Runs [`prebuildify`](https://github.com/mafintosh/prebuildify) in the preconfigured [`prebuild/docker-images`](https://github.com/prebuild/docker-images) to compile and name prebuilds for a certain platform. This means you don't have to worry about GCC flags, environment variables or system dependencies. In addition, `prebuildify-cross` copies only npm package files to Docker (following the rules of `.npmignore` and `files`) and mounts `node_modules` removing the need for a repeated `npm install`.
 
-i want to build native modules for [Scuttlebutt](https://scuttlebutt.nz) pubs, to use on ARM Linux devices like the Raspberry Pi. meanwhile, i also want to support mobile ARM devices like Android.
+## Install
 
-## how does it work?
-
-`prebuildify-cross` will:
-
-- build a Docker image for your intended target, based on the respective [`dockcross`](https://github.com/dockcross/dockcross) image
-- create a Docker container with your input (default is `.`) mounted inside
-- run `npm install --ignore-scripts` and `npm run prebuild`
-- copy out `./prebuilds` from the container to your output (default is `./prebuilds`)
-
-## supported targets
-
-- `prebuildify-cross --platform=linux --arch=x32`
-- `prebuildify-cross --platform=linux --arch=x64`
-- `prebuildify-cross --platform=linux --arch=arm --arm-version=5`
-- `prebuildify-cross --platform=linux --arch=arm --arm-version=6`
-- `prebuildify-cross --platform=linux --arch=arm --arm-version=7`
-- `prebuildify-cross --platform=linux --arch=arm64`
-- `prebuildify-cross --platform=android --arch=arm --arm-version=7`
-- `prebuildify-cross --platform=android --arch=arm64`
-
-## usage
-
-(note: `prebuildify-cross` depends on having Docker installed.)
-
-in the module you want to cross-compile prebuilds,
-
-ensure you have an npm script `prebuild`, like:
+Depends on having Docker installed, as well as `prebuildify` and `node-gyp`:
 
 ```
+npm install --save-dev prebuildify node-gyp prebuildify-cross
+```
+
+## Usage
+
+The `prebuildify-cross` cli wraps `prebuildify` and passes all command line arguments on to `prebuildify` or `npm run prebuild` if such a script exists in your `package.json`. For example, with the following setup you could run `prebuildify-cross` without arguments:
+
+```json
 {
   "scripts": {
-    "prebuild": "prebuildify --all --strip"
+    "prebuild": "prebuildify -t 8.14.0 --napi --strip"
   }
 }
 ```
 
-then install `prebuildify-cross` as a dev-dependency:
+Without that script, you could run `prebuildify-cross -t 8.14.0 --napi --strip` to the same effect. If you combine both approaches, arguments will be concatenated.
+
+By default `prebuildify-cross` makes prebuilds for [all platforms](#images). To override, pass one or more `--image` or `-i` arguments:
 
 ```
-npm install --save-dev prebuildify-cross
+prebuildify-cross -i linux -i alpine [..]
 ```
 
-then add new `prebuild:cross:${TARGET}` scripts for the targets you want to support:
+This is the only argument specific to `prebuildify-cross`, which does however respect the `--cwd` argument of `prebuildify`.
 
-```
-{
-  "scripts": {
-    "prebuild:cross:linux-armv7": "prebuildify-cross --platform linux --arch arm --arm-version 7",
-    "prebuild:cross:android-armv7": "prebuildify-cross --platform android --arch arm --arm-version 7"
-  }
-}
-```
+## Images
 
-then when you want to cross-compile prebuilds, `npm run` the appropriate script.
+### `centos7-devtoolset7`
 
-for the full command-line usage:
+Aliased as `linux`.
 
-```
-Usage:
-  prebuildify-cross [options]
+Compile in CentOS 7, as a better alternative to (most commonly) Ubuntu on Travis. Makes the prebuilt binary compatible with Debian 8, Ubuntu 14.04, RHEL 7, CentOS 7 and other Linux flavors with an old glibc.
 
-  Arguments:
+By default the prebuild will be [tagged](https://github.com/prebuild/prebuildify#options) with the libc flavor to set it apart from Alpine prebuilds, e.g. `linux-x64/node.libc.node`.
 
-    --arch <arch>: **required** architecture (supported: x32, x64, arm, arm64)
-    --arm-version <version>: if using arm architecture, **required* arm version (supported: 5, 6, 7, 8)
-    --platform: **required** platform (supported: linux, android)
+### `alpine`
 
-    --input <path>: _optional_ directory of input image spec (default: cwd)
-    --output <path>: _optional_ directory to output build results (default: prebuilds)
+Compile in Alpine, which uses musl instead of glibc and therefore can't run regular linux prebuilds. Worse, it sometimes does successfully _load_ such a  prebuild during `npm install` - which prevents a compilation fallback from kicking in - and then segfaults at runtime.
 
-  Flags:
+By default the prebuild will be [tagged](https://github.com/prebuild/prebuildify#options) with the libc flavor, e.g. `linux-x64/node.musl.node`.
 
-    -h, --help: show this usage
+### `linux-armv7` and `linux-arm64`
 
-  Examples:
+Cross-compile for Linux ARM. These images thinly wrap [`dockcross`](https://github.com/dockcross/dockcross) images.
 
-    prebuildify-cross --platform linux --arch x64
+By default the prebuild will be [tagged](https://github.com/prebuild/prebuildify#options) with the armv version (7 or 8, respectively).
 
-    prebuildify-cross --platform linux --arch arm --arm-version 7
+### `android-armv7` and `android-arm64`
 
-    prebuildify-cross --platform linux --arch arm64
+Cross-compile for Android ARM. These images thinly wrap [`dockcross`](https://github.com/dockcross/dockcross) images.
 
-    prebuildify-cross --platform android --arch arm --arm-version 7
+By default the prebuild will be [tagged](https://github.com/prebuild/prebuildify#options) with the armv version (7 or 8, respectively).
 
-    prebuildify-cross --platform android --arch arm64
-```
-
-you can also pass in environment variables instead of command-line arguments, e.g.
-
-```shell
-PLATFORM=linux ARCH=arm ARM_VERSION=7 prebuildify-cross
-```
-
-## references
+## References
 
 - [Debian multiarch tuples](https://wiki.debian.org/Multiarch/Tuples)
 - [Rust support tuples](https://forge.rust-lang.org/platform-support.html)
@@ -107,8 +70,7 @@ PLATFORM=linux ARCH=arm ARM_VERSION=7 prebuildify-cross
 - [Arm options](https://gcc.gnu.org/onlinedocs/gcc/ARM-Options.html)
 - [Rust cross-compiling tutorial](https://github.com/japaric/rust-cross)
 - [Rust cross-compilation tool](https://github.com/rust-embedded/cross)
-- [`leveldown` cross-compilation discussion](https://github.com/Level/leveldown/pull/572)
 
-## license
+## License
 
 GPL-3.0
