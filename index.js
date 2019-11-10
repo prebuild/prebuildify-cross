@@ -2,6 +2,7 @@
 
 // Also requires glob (npm/npm-packlist#42)
 const packlist = require('npm-packlist')
+const tar = require('tar-fs')
 const unixify = require('unixify')
 const once = require('once')
 const cp = require('child_process')
@@ -52,20 +53,26 @@ module.exports = function (opts, callback) {
 
     console.error('Prebuild', image)
 
-    cp.spawn('docker', args, { cwd, stdio: 'inherit' })
+    const stdio = ['ignore', 'pipe', 'inherit']
+    const child = cp.spawn('docker', args, { cwd, stdio })
+
+    child.on('error', callback)
+    child.on('exit', onexit)
+
+    child.stdout
+      .pipe(tar.extract('./prebuilds'), { dmode: 0o755, fmode: 0o644 })
+      .on('finish', loop)
       .on('error', callback)
-      .on('exit', onexit)
   }
 
   function onexit (code) {
     if (code) return callback(new Error('Exited with code ' + code))
-    loop()
   }
 }
 
 function packageFiles (dir) {
   return packlist.sync({ dir }).filter(function (fp) {
-    return !/^(node_modules|prebuilds)[/\\]/i.test(fp)
+    return !/^prebuilds[/\\]/i.test(fp)
   })
 }
 
@@ -75,7 +82,7 @@ function guestScript (files) {
 }
 
 function volume (host, guest) {
-  return ['-v', cygwin(host) + ':' + guest]
+  return ['-v', cygwin(host) + ':' + guest + ':ro']
 }
 
 function env () {
@@ -84,9 +91,6 @@ function env () {
 }
 
 function user () {
-  // TODO: test
-  // return ['-u', process.env.TRAVIS ? 'travis' : 'node']
-
   return ['-u', 'node']
 }
 

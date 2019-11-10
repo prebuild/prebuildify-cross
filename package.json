@@ -12,6 +12,7 @@
     "minimist": "^1.2.0",
     "npm-packlist": "^2.0.0",
     "once": "^1.4.0",
+    "tar-fs": "^2.0.0",
     "unixify": "^1.0.0"
   },
   "devDependencies": {
