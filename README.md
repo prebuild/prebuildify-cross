@@ -2,7 +2,7 @@
 
 **Compile prebuilds in Docker, supporting Linux (including Debian 8, Ubuntu 14.04, RHEL 7, CentOS 7 and up), Alpine Linux, ARM Linux devices like the Raspberry Pi and mobile ARM devices like Android.**
 
-Runs [`prebuildify`](https://github.com/mafintosh/prebuildify) in the preconfigured [`prebuild/docker-images`](https://github.com/prebuild/docker-images) to compile and name prebuilds for a certain platform. This means you don't have to worry about GCC flags, environment variables or system dependencies. In addition, `prebuildify-cross` copies only npm package files to Docker (following the rules of `.npmignore` and `files`) and mounts `node_modules` removing the need for a repeated `npm install`.
+Runs [`prebuildify`](https://github.com/mafintosh/prebuildify) in preconfigured [`prebuild/docker-images`](https://github.com/prebuild/docker-images) containers to compile and name prebuilds for a certain platform. This means you don't have to worry about GCC flags, environment variables or system dependencies. In addition, `prebuildify-cross` copies only npm package files to Docker (following the rules of `.npmignore` and `files`) and mounts `node_modules` removing the need for a repeated `npm install`.
 
 ## Install
 
