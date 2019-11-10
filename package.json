@@ -8,6 +8,8 @@
     "test": "standard"
   },
   "dependencies": {
+    "browserify": "^16.5.0",
+    "docker-run": "github:vweevers/docker-run#patch-1",
     "glob": "^7.1.6",
     "minimist": "^1.2.0",
     "npm-packlist": "^2.0.0",

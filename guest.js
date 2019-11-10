@@ -3,11 +3,11 @@
 const fs = require('fs')
 const path = require('path')
 const cp = require('child_process')
-const argv = process.argv.slice(process.argv[1] === __filename ? 2 : 1)
-const files = []
 
 // Would prefer /app but that's owned by root in the prebuild images
 const cwd = '/home/node/app'
+const files = JSON.parse(process.env.PREBUILDIFY_CROSS_FILES)
+const argv = process.argv.slice(2)
 
 // Copy host files to working directory
 for (const file of files) {
@@ -23,11 +23,9 @@ for (const file of files) {
 // Use node_modules of host to avoid a second install step
 fs.symlinkSync('/input/node_modules', path.join(cwd, 'node_modules'))
 
-// TODO: bundle this
-const tar = require(path.join(cwd, 'node_modules', 'tar-fs'))
-
-const pkg = require(path.join(cwd, 'package.json'))
-const scripts = pkg.scripts || {}
+const tar = require('tar-fs')
+const pkg = fs.readFileSync(path.join(cwd, 'package.json'), 'utf8')
+const scripts = JSON.parse(pkg).scripts || {}
 const stdio = ['ignore', 2, 2]
 
 if (scripts.prebuild) {

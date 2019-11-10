@@ -3,11 +3,11 @@
 // Also requires glob (npm/npm-packlist#42)
 const packlist = require('npm-packlist')
 const tar = require('tar-fs')
+const run = require('docker-run')
+const browserify = require('browserify')
 const unixify = require('unixify')
 const once = require('once')
-const cp = require('child_process')
 const path = require('path')
-const fs = require('fs')
 
 module.exports = function (opts, callback) {
   if (typeof opts === 'function') {
@@ -20,6 +20,8 @@ module.exports = function (opts, callback) {
 
   const images = [].concat(opts.image || [])
   const cwd = path.resolve(opts.cwd || '.')
+  const files = JSON.stringify(packageFiles(cwd))
+  const prebuilds = path.join(cwd, 'prebuilds')
 
   if (!images.length) {
     images.push('centos7-devtoolset7')
@@ -30,9 +32,6 @@ module.exports = function (opts, callback) {
     images.push('android-arm64')
   }
 
-  const script = guestScript(packageFiles(cwd))
-  const scriptArgs = opts.args || []
-
   loop()
 
   function loop () {
@@ -40,25 +39,30 @@ module.exports = function (opts, callback) {
     if (!image) return process.nextTick(callback)
     if (image === 'linux') image = 'centos7-devtoolset7'
 
-    const args = [
-      'run',
-      '--rm',
-      ...env(),
-      ...user(),
-      ...volume(cwd, '/input'),
-      'prebuild/' + image,
-      ...command(script),
-      ...rest(scriptArgs, image)
-    ]
-
     console.error('Prebuild', image)
 
-    const stdio = ['ignore', 'pipe', 'inherit']
-    const child = cp.spawn('docker', args, { cwd, stdio })
-    const prebuilds = path.join(cwd, 'prebuilds')
+    const child = run('prebuild/' + image, {
+      entrypoint: 'node',
+      argv: rest(opts.args || [], image),
+      volumes: {
+        [cygwin(cwd)]: '/input:ro' // mafintosh/docker-run#12
+      },
+      env: {
+        PREBUILDIFY_CROSS_FILES: files,
+        // Disable npm update check
+        NO_UPDATE_NOTIFIER: 'true'
+      }
+    })
 
-    child.on('error', callback)
-    child.on('exit', onexit)
+    child
+      .on('error', callback)
+      .on('exit', onexit)
+
+    guestScript()
+      .pipe(child.stdin)
+
+    child.stderr
+      .pipe(process.stderr)
 
     child.stdout
       .pipe(tar.extract(prebuilds), { dmode: 0o755, fmode: 0o644 })
@@ -77,35 +81,20 @@ function packageFiles (dir) {
   })
 }
 
-function guestScript (files) {
-  return fs.readFileSync(require.resolve('./guest.js'), 'utf8')
-    .replace('const files = []', `const files = ${JSON.stringify(files)}`)
+function guestScript () {
+  return browserify(require.resolve('./guest.js'), {
+    basedir: __dirname,
+    node: true
+  }).bundle()
 }
 
-function volume (host, guest) {
-  return ['-v', cygwin(host) + ':' + guest + ':ro']
-}
-
-function env () {
-  // Disable npm update check
-  return ['-e', 'NO_UPDATE_NOTIFIER=true']
-}
-
-function user () {
-  return ['-u', 'node']
-}
-
-function command (script) {
-  return ['node', '-e', script]
-}
-
-function rest (scriptArgs, image) {
-  const rest = scriptArgs.slice()
+function rest (args, image) {
+  const rest = ['-'].concat(args)
 
   if (/^(linux|android)-arm/.test(image)) rest.push('--tag-armv')
   if (/^(centos|alpine)/.test(image)) rest.push('--tag-libc')
 
-  return rest.length ? ['--'].concat(rest) : []
+  return rest
 }
 
 function cygwin (fp) {
