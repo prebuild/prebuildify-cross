@@ -55,12 +55,13 @@ module.exports = function (opts, callback) {
 
     const stdio = ['ignore', 'pipe', 'inherit']
     const child = cp.spawn('docker', args, { cwd, stdio })
+    const prebuilds = path.join(cwd, 'prebuilds')
 
     child.on('error', callback)
     child.on('exit', onexit)
 
     child.stdout
-      .pipe(tar.extract('./prebuilds'), { dmode: 0o755, fmode: 0o644 })
+      .pipe(tar.extract(prebuilds), { dmode: 0o755, fmode: 0o644 })
       .on('finish', loop)
       .on('error', callback)
   }
