@@ -40,6 +40,11 @@ module.exports = function (opts, callback) {
       .on('end', end)
 
     function progress () {
+      if (process.env.CI) {
+        console.error(`> prebuildify-cross pull ${this.image}`)
+        return this.removeListener('progress', progress)
+      }
+
       const count = `${this.layers} layers`
       const ratio = `${bytes(this.transferred)} / ${bytes(this.length)}`
 
@@ -47,7 +52,6 @@ module.exports = function (opts, callback) {
     }
 
     function end () {
-      log.done()
       run(this.image)
     }
   }
