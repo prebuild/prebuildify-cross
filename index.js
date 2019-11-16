@@ -1,6 +1,5 @@
 'use strict'
 
-// Also requires glob (npm/npm-packlist#42)
 const packlist = require('npm-packlist')
 const tar = require('tar-fs')
 const dockerPull = require('docker-pull')
