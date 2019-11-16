@@ -1,21 +1,42 @@
 {
   "name": "prebuildify-cross",
   "version": "3.1.2",
-  "description": "cross-compile prebuilds",
-  "bin": "./build",
-  "directories": {
-    "example": "examples"
+  "description": "Compile prebuilds in Docker",
+  "license": "GPL-3.0",
+  "bin": "./cli.js",
+  "scripts": {
+    "test": "standard"
   },
-  "scripts": {},
+  "dependencies": {
+    "browserify": "^16.5.0",
+    "docker-pull": "^1.1.0",
+    "docker-run": "^3.1.0",
+    "log-update": "^3.3.0",
+    "minimist": "^1.2.0",
+    "mkdirp": "^0.5.1",
+    "npm-packlist": "^2.0.1",
+    "once": "^1.4.0",
+    "pretty-bytes": "^5.3.0",
+    "tar-fs": "^2.0.0",
+    "unixify": "^1.0.0"
+  },
+  "devDependencies": {
+    "standard": "^14.3.1"
+  },
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/ahdinosaur/prebuildify-cross.git"
+    "url": "https://github.com/prebuild/prebuildify-cross.git"
   },
-  "keywords": [],
-  "author": "ahdinosaur",
-  "license": "GPL-3.0",
   "bugs": {
-    "url": "https://github.com/ahdinosaur/prebuildify-cross/issues"
+    "url": "https://github.com/prebuild/prebuildify-cross/issues"
   },
-  "homepage": "https://github.com/ahdinosaur/prebuildify-cross#readme"
+  "homepage": "https://github.com/prebuild/prebuildify-cross",
+  "keywords": [
+    "prebuildify",
+    "prebuild",
+    "dockcross"
+  ],
+  "engines": {
+    "node": ">=8"
+  }
 }
