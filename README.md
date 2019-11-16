@@ -14,39 +14,37 @@ npm install --save-dev prebuildify node-gyp prebuildify-cross
 
 ## Usage
 
-The `prebuildify-cross` cli wraps `prebuildify` and passes all command line arguments on to `prebuildify` or `npm run prebuild` if such a script exists in your `package.json`. For example, with the following setup you could run `prebuildify-cross` without arguments:
-
-```json
-{
-  "scripts": {
-    "prebuild": "prebuildify -t 8.14.0 --napi --strip"
-  }
-}
-```
-
-Without that script, you could run `prebuildify-cross -t 8.14.0 --napi --strip` to the same effect. If you combine both approaches, arguments will be concatenated.
-
-By default `prebuildify-cross` makes prebuilds for [all platforms](#images). To override, pass one or more `--image` or `-i` arguments:
+The `prebuildify-cross` cli forwards all command line arguments to `prebuildify`, but adds an `--image` or `-i` argument. For example, the following command will invoke `prebuildify -t 8.14.0 --napi --strip` in a CentOS container and copy the resulting prebuild to `./prebuilds`:
 
 ```
-prebuildify-cross -i linux -i alpine [..]
+prebuildify-cross -i centos7-devtoolset7 -t 8.14.0 --napi --strip
 ```
 
-This is the only argument specific to `prebuildify-cross`, which does however respect the `--cwd` argument of `prebuildify`.
+To build for more than one platform, multiple `--image` arguments may be passed:
+
+```
+prebuildify-cross -i linux-armv7 -i linux-arm64 -t ..
+```
+
+Lastly, it's possible to use your own custom image with e.g. `-i my-namespace/my-image`.
 
 ## Images
 
 ### `centos7-devtoolset7`
 
-Aliased as `linux`.
+Compile in CentOS 7, as a better alternative to (commonly) Ubuntu 16.04 on Travis. Makes the prebuild compatible with Debian 8, Ubuntu 14.04, RHEL 7, CentOS 7 and other Linux flavors with an old glibc.
 
-Compile in CentOS 7, as a better alternative to (most commonly) Ubuntu on Travis. Makes the prebuilt binary compatible with Debian 8, Ubuntu 14.04, RHEL 7, CentOS 7 and other Linux flavors with an old glibc.
+> The neat thing about this is that you get to compile with gcc 7 but glibc 2.17, so binaries are compatible for \[among others] Ubuntu 14.04 and Debian 8.
+>
+> The RHEL folks put in a ton of work to make the devtoolsets work on their older base systems (libc mainly), which involves shipping a delta library that contains the new stuff that can be statically linked in where it's used. We use this method for building Node binary releases.
+>
+> \-- <cite>[**@rvagg**](https://github.com/rvagg) ([prebuild/docker-images#8](https://github.com/prebuild/docker-images/pull/8))</cite>
 
 By default the prebuild will be [tagged](https://github.com/prebuild/prebuildify#options) with the libc flavor to set it apart from Alpine prebuilds, e.g. `linux-x64/node.libc.node`.
 
 ### `alpine`
 
-Compile in Alpine, which uses musl instead of glibc and therefore can't run regular linux prebuilds. Worse, it sometimes does successfully _load_ such a  prebuild during `npm install` - which prevents a compilation fallback from kicking in - and then segfaults at runtime.
+Compile in Alpine, which uses musl instead of glibc and therefore can't run regular linux prebuilds. Worse, it sometimes does successfully _load_ such a  prebuild during `npm install` - which prevents a compilation fallback from kicking in - and then segfaults at runtime. You can fix this situation in two ways: by shipping an `alpine` prebuild and/or by shipping a `centos7-devtoolset7` prebuild, because the latter will be skipped in Alpine thanks to the `libc` tag.
 
 By default the prebuild will be [tagged](https://github.com/prebuild/prebuildify#options) with the libc flavor, e.g. `linux-x64/node.musl.node`.
 

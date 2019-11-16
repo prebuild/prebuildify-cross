@@ -27,21 +27,11 @@ module.exports = function (opts, callback) {
   const prebuilds = path.join(cwd, 'prebuilds')
   const log = logger.create(process.stderr, { showCursor: true })
 
-  if (!images.length) {
-    images.push('centos7-devtoolset7')
-    images.push('alpine')
-    images.push('linux-armv7')
-    images.push('linux-arm64')
-    images.push('android-armv7')
-    images.push('android-arm64')
-  }
-
   loop()
 
   function loop () {
     let image = images.shift()
     if (!image) return process.nextTick(callback)
-    if (image === 'linux') image = 'centos7-devtoolset7'
     if (!image.includes('/')) image = 'prebuild/' + image
 
     dockerPull(image)
@@ -53,7 +43,7 @@ module.exports = function (opts, callback) {
       const count = `${this.layers} layers`
       const ratio = `${bytes(this.transferred)} / ${bytes(this.length)}`
 
-      log(`prebuildify-cross pull ${this.image}: ${count}, ${ratio}`)
+      log(`> prebuildify-cross pull ${this.image}: ${count}, ${ratio}`)
     }
 
     function end () {
@@ -63,13 +53,17 @@ module.exports = function (opts, callback) {
   }
 
   function run (image) {
-    console.error('prebuildify-cross run', image)
+    const argv = prebuildifyArgv(opts.argv || [], image)
+
+    console.error('> prebuildify-cross run %s', image)
+    console.error('> prebuildify %s\n', argv.join(' '))
 
     const child = dockerRun(image, {
       entrypoint: 'node',
-      argv: rest(opts.args || [], image),
+      argv: ['-'].concat(argv),
       volumes: {
-        [cygwin(cwd)]: '/input:ro' // mafintosh/docker-run#12
+        // Should but can't use :ro (mafintosh/docker-run#12)
+        [cygwin(cwd)]: '/input'
       },
       env: {
         PREBUILDIFY_CROSS_FILES: files,
@@ -112,13 +106,20 @@ function guestScript () {
   }).bundle()
 }
 
-function rest (args, image) {
-  const rest = ['-'].concat(args)
+function prebuildifyArgv (argv, image) {
+  argv = argv.slice()
 
-  if (/^prebuild\/(linux|android)-arm/.test(image)) rest.push('--tag-armv')
-  if (/^prebuild\/(centos|alpine)/.test(image)) rest.push('--tag-libc')
+  for (let i = 0; i < argv.length - 1; i++) {
+    if (/^(-i|--image)$/.test(argv[i]) && argv[i + 1][0] !== '-') {
+      argv.splice(i--, 2)
+    }
+  }
 
-  return rest
+  // TODO: move this to the docker images?
+  if (/^prebuild\/(linux|android)-arm/.test(image)) argv.push('--tag-armv')
+  if (/^prebuild\/(centos|alpine)/.test(image)) argv.push('--tag-libc')
+
+  return argv
 }
 
 function cygwin (fp) {

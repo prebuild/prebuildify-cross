@@ -10,10 +10,11 @@
   "dependencies": {
     "browserify": "^16.5.0",
     "docker-pull": "^1.1.0",
-    "docker-run": "github:vweevers/docker-run#patch-1",
+    "docker-run": "^3.1.0",
     "glob": "^7.1.6",
     "log-update": "^3.3.0",
     "minimist": "^1.2.0",
+    "mkdirp": "^0.5.1",
     "npm-packlist": "^2.0.0",
     "once": "^1.4.0",
     "pretty-bytes": "^5.3.0",
