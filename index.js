@@ -2,7 +2,7 @@
 
 const packlist = require('npm-packlist')
 const tar = require('tar-fs')
-const dockerPull = require('docker-pull')
+const dockerPull = require('@vweevers/docker-pull')
 const dockerRun = require('docker-run')
 const logger = require('log-update')
 const bytes = require('pretty-bytes')

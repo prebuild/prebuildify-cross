@@ -8,8 +8,8 @@
     "test": "standard"
   },
   "dependencies": {
+    "@vweevers/docker-pull": "^1.1.1",
     "browserify": "^16.5.0",
-    "docker-pull": "^1.1.0",
     "docker-run": "^3.1.0",
     "log-update": "^3.3.0",
     "minimist": "^1.2.0",
