@@ -2,7 +2,7 @@
 
 const packlist = require('npm-packlist')
 const tar = require('tar-fs')
-const dockerPull = require('docker-pull')
+const dockerPull = require('@vweevers/docker-pull')
 const dockerRun = require('docker-run')
 const logger = require('log-update')
 const bytes = require('pretty-bytes')
@@ -31,7 +31,16 @@ module.exports = function (opts, callback) {
   function loop () {
     let image = images.shift()
     if (!image) return process.nextTick(callback)
-    if (!image.includes('/')) image = 'prebuild/' + image
+
+    // Default to images from https://github.com/prebuild/docker-images
+    if (!image.includes('/')) {
+      image = 'ghcr.io/prebuild/' + image
+
+      // Pin to version 1 by default
+      if (!image.includes(':')) {
+        image = image + ':1'
+      }
+    }
 
     dockerPull(image)
       .on('progress', progress)
@@ -83,7 +92,7 @@ module.exports = function (opts, callback) {
       .pipe(child.stdin)
 
     child.stderr
-      .pipe(process.stderr)
+      .pipe(process.stderr, { end: false })
 
     child.stdout
       .pipe(tar.extract(prebuilds), { dmode: 0o755, fmode: 0o644 })
@@ -118,9 +127,9 @@ function prebuildifyArgv (argv, image) {
     }
   }
 
-  // TODO: move this to the docker images?
-  if (/^prebuild\/(linux|android)-arm/.test(image)) argv.push('--tag-armv')
-  if (/^prebuild\/(centos|alpine)/.test(image)) argv.push('--tag-libc')
+  // TODO: move this to the docker images (https://github.com/prebuild/docker-images/issues/11)
+  if (/^(ghcr\.io\/)?prebuild\/(linux|android)-arm/.test(image)) argv.push('--tag-armv')
+  if (/^(ghcr\.io\/)?prebuild\/(centos|alpine)/.test(image)) argv.push('--tag-libc')
 
   return argv
 }

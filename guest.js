@@ -25,7 +25,7 @@ for (const file of files) {
 fs.symlinkSync('/input/node_modules', path.join(cwd, 'node_modules'))
 
 const stdio = ['ignore', 2, 2]
-const res = cp.spawnSync('npx', ['prebuildify', ...argv], { cwd, stdio })
+const res = cp.spawnSync('npx', ['--no-install', 'prebuildify', ...argv], { cwd, stdio })
 
 if (res.status) process.exit(res.status)
 if (res.error) throw res.error
