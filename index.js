@@ -92,7 +92,7 @@ module.exports = function (opts, callback) {
       .pipe(child.stdin)
 
     child.stderr
-      .pipe(process.stderr)
+      .pipe(process.stderr, { end: false })
 
     child.stdout
       .pipe(tar.extract(prebuilds), { dmode: 0o755, fmode: 0o644 })
