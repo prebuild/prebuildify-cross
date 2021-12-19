@@ -105,8 +105,8 @@ module.exports = function (opts, callback) {
   }
 }
 
-function packageFiles (dir) {
-  return packlist.sync({ dir }).filter(function (fp) {
+function packageFiles (path) {
+  return packlist.sync({ path }).filter(function (fp) {
     return !/^prebuilds[/\\]/i.test(fp)
   })
 }
@@ -123,6 +123,9 @@ function prebuildifyArgv (argv, image) {
 
   for (let i = 0; i < argv.length - 1; i++) {
     if (/^(-i|--image)$/.test(argv[i]) && argv[i + 1][0] !== '-') {
+      argv.splice(i--, 2)
+    }
+    if (/^(--cwd)$/.test(argv[i]) && argv[i + 1][0] !== '-') {
       argv.splice(i--, 2)
     }
   }
