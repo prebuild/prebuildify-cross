@@ -36,9 +36,9 @@ module.exports = function (opts, callback) {
     if (!image.includes('/')) {
       image = 'ghcr.io/prebuild/' + image
 
-      // Pin to version 1 by default
+      // Pin to latest major version by default
       if (!image.includes(':')) {
-        image = image + ':1'
+        image = image + ':2'
       }
     }
 
