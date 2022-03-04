@@ -3,7 +3,6 @@
 const fs = require('fs')
 const path = require('path')
 const cp = require('child_process')
-const mkdirp = require('mkdirp')
 
 // TODO: fix permissions of WORKDIR in prebuild images
 const cwd = '/home/node/app'
@@ -15,8 +14,7 @@ for (const file of files) {
   const a = path.join('/input', file)
   const b = path.join(cwd, file)
 
-  mkdirp.sync(path.dirname(b))
-
+  fs.mkdirSync(path.dirname(b), { recursive: true })
   fs.copyFileSync(a, b, fs.constants.COPYFILE_EXCL)
   fs.chmodSync(b, 0o644)
 }
