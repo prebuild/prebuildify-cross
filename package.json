@@ -13,6 +13,7 @@
     "docker-run": "^3.1.0",
     "log-update": "^4.0.0",
     "minimist": "^1.2.0",
+    "node-docker-api": "^1.1.22",
     "npm-packlist": "^4.0.0",
     "once": "^1.4.0",
     "pretty-bytes": "^5.3.0",
