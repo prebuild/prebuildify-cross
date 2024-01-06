@@ -23,7 +23,7 @@ prebuildify-cross -i centos7-devtoolset7 -t 8.14.0 --napi --strip
 To build for more than one platform, multiple `--image` arguments may be passed:
 
 ```
-prebuildify-cross -i linux-armv7 -i linux-arm64 -t ..
+prebuildify-cross
 ```
 
 By default [`prebuild/docker-images`](https://github.com/prebuild/docker-images) are used which are publicly hosted on the [GitHub Container Registry](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry) (`ghcr.io`). It's possible to use custom images with e.g. `-i my-namespace/my-image`. Image arguments that don't contain a forward slash are expanded to `ghcr.io/prebuild/<image>` and if these don't contain a tag they're further expanded to `ghcr.io/prebuild/<image>:<version>` where `version` is currently 2.
@@ -32,6 +32,12 @@ To use `latest` images (not recommended) an image tag must be specified explicit
 
 ```
 prebuildify-cross -i linux-armv7:latest -t ..
+```
+
+Set a custom node_modules path:
+
+```sh
+prebuildify-cross --nodemodulespath ../../node_modules -i linux-armv7:latest -t 20.0.0 --strip
 ```
 
 ## Images
