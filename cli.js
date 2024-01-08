@@ -4,7 +4,7 @@
 const argv = process.argv.slice(2)
 
 const opts = require('minimist')(argv, {
-  string: ['image', 'cwd', 'nodemodulespath'],
+  string: ['image', 'cwd', 'modules'],
   alias: { image: 'i' }
 })
 

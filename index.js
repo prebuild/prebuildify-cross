@@ -22,7 +22,7 @@ module.exports = function (opts, callback) {
 
   const images = [].concat(opts.image || [])
   const cwd = path.resolve(opts.cwd || '.')
-  const nodeModulesPath = opts.nodemodulespath ? path.resolve(opts.nodemodulespath) : null;
+  const modules = opts.modules ? path.resolve(opts.modules) : null;
 
   const files = JSON.stringify(packageFiles(cwd))
   const prebuilds = path.join(cwd, 'prebuilds')
@@ -77,8 +77,8 @@ module.exports = function (opts, callback) {
       [cygwin(cwd)]: '/input',
     };
 
-    if (nodeModulesPath) {
-      volumes[nodeModulesPath] = '/input/node_modules';
+    if (modules) {
+      volumes[modules] = '/input/node_modules';
     }
 
     const child = dockerRun(image, {
@@ -136,7 +136,7 @@ function prebuildifyArgv (argv, image) {
     if (/^(--cwd)$/.test(argv[i]) && argv[i + 1][0] !== '-') {
       argv.splice(i--, 2)
     }
-    if (/^(--nodemodulespath)$/.test(argv[i]) && argv[i + 1][0] !== '-') {
+    if (/^(--modules)$/.test(argv[i]) && argv[i + 1][0] !== '-') {
       argv.splice(i--, 2)
     }
   }
