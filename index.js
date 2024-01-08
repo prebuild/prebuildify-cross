@@ -22,7 +22,7 @@ module.exports = function (opts, callback) {
 
   const images = [].concat(opts.image || [])
   const cwd = path.resolve(opts.cwd || '.')
-  const modules = opts.modules ? path.resolve(opts.modules) : null;
+  const modules = opts.modules ? path.resolve(cwd, opts.modules) : null;
 
   const files = JSON.stringify(packageFiles(cwd))
   const prebuilds = path.join(cwd, 'prebuilds')
