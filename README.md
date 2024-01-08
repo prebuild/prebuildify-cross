@@ -34,10 +34,10 @@ To use `latest` images (not recommended) an image tag must be specified explicit
 prebuildify-cross -i linux-armv7:latest -t ..
 ```
 
-Set a custom node_modules path:
+When working in a monorepo, where `./node_modules` does not contain the dependencies that `prebuildify-cross` relies upon, a custom path can be provided with `--modules`. It can be an absolute path or relative to the current working directory. For example:
 
 ```sh
-prebuildify-cross --nodemodulespath ../../node_modules -i linux-armv7:latest -t 20.0.0 --strip
+prebuildify-cross --modules ../../node_modules -i linux-armv7:latest -t 20.0.0 --strip
 ```
 
 ## Images
