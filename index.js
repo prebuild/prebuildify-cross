@@ -11,6 +11,8 @@ const unixify = require('unixify')
 const once = require('once')
 const path = require('path')
 
+const {Docker} = require('node-docker-api')
+
 module.exports = function (opts, callback) {
   if (typeof opts === 'function') {
     callback = opts
@@ -28,26 +30,40 @@ module.exports = function (opts, callback) {
   const prebuilds = path.join(cwd, 'prebuilds')
   const log = logger.create(process.stderr, { showCursor: true })
 
+  const docker = new Docker({ socketPath: '/var/run/docker.sock' });
+
   loop()
 
   function loop () {
     let image = images.shift()
     if (!image) return process.nextTick(callback)
 
-    // Default to images from https://github.com/prebuild/docker-images
-    if (!image.includes('/')) {
-      image = 'ghcr.io/prebuild/' + image
+    docker.image.list()
+    .then(images => {
+      let tags = images.map(i => i.data.RepoTags).flat()
+      console.log(tags)
+      if(tags.includes(image)) {
+        console.log(`the image ${image} exists`)
+        run(image)
+      } else {
+        console.log(`the image ${image} doesn't exist`)
 
-      // Pin to latest major version by default
-      if (!image.includes(':')) {
-        image = image + ':2'
+        // Default to images from https://github.com/prebuild/docker-images
+        if (!image.includes('/')) {
+          image = 'ghcr.io/prebuild/' + image
+
+          // Pin to latest major version by default
+          if (!image.includes(':')) {
+            image = image + ':2'
+          }
+        }
+
+        dockerPull(image)
+          .on('progress', progress)
+          .on('error', callback)
+          .on('end', end)
       }
-    }
-
-    dockerPull(image)
-      .on('progress', progress)
-      .on('error', callback)
-      .on('end', end)
+    })
 
     function progress () {
       if (process.env.CI) {
