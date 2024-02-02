@@ -22,7 +22,7 @@ module.exports = function (opts, callback) {
 
   const images = [].concat(opts.image || [])
   const cwd = path.resolve(opts.cwd || '.')
-  const modules = opts.modules ? path.resolve(cwd, opts.modules) : null;
+  const modules = opts.modules ? path.resolve(cwd, opts.modules) : null
 
   const files = JSON.stringify(packageFiles(cwd))
   const prebuilds = path.join(cwd, 'prebuilds')
@@ -74,11 +74,11 @@ module.exports = function (opts, callback) {
 
     const volumes = {
       // Should but can't use :ro (mafintosh/docker-run#12)
-      [cygwin(cwd)]: '/input',
-    };
+      [cygwin(cwd)]: '/input'
+    }
 
     if (modules) {
-      volumes[modules] = '/input/node_modules';
+      volumes[modules] = '/input/node_modules'
     }
 
     const child = dockerRun(image, {
