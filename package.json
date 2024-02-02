@@ -3,7 +3,9 @@
   "version": "5.1.0",
   "description": "Compile prebuilds in Docker",
   "license": "GPL-3.0",
-  "bin": "./cli.js",
+  "bin": {
+    "prebuildify-cross": "cli.js"
+  },
   "scripts": {
     "test": "standard"
   },
@@ -24,7 +26,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/prebuild/prebuildify-cross.git"
+    "url": "git+https://github.com/prebuild/prebuildify-cross.git"
   },
   "bugs": {
     "url": "https://github.com/prebuild/prebuildify-cross/issues"
