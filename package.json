@@ -11,8 +11,8 @@
   },
   "dependencies": {
     "@vweevers/docker-pull": "^1.1.1",
+    "@thegecko/docker-run": "thegecko/docker-run#expose-version",
     "browserify": "^17.0.0",
-    "docker-run": "^3.1.0",
     "log-update": "^4.0.0",
     "minimist": "^1.2.0",
     "npm-packlist": "^4.0.0",
