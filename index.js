@@ -3,13 +3,15 @@
 const packlist = require('npm-packlist')
 const tar = require('tar-fs')
 const dockerPull = require('@vweevers/docker-pull')
-const dockerRun = require('docker-run')
+const dockerRun = require('@thegecko/docker-run')
 const logger = require('log-update')
 const bytes = require('pretty-bytes')
 const browserify = require('browserify')
 const unixify = require('unixify')
 const once = require('once')
 const path = require('path')
+
+const DOCKER_VERSION = 'v1.24'
 
 module.exports = function (opts, callback) {
   if (typeof opts === 'function') {
@@ -44,7 +46,7 @@ module.exports = function (opts, callback) {
       }
     }
 
-    dockerPull(image)
+    dockerPull(image, { version: DOCKER_VERSION })
       .on('progress', progress)
       .on('error', callback)
       .on('end', end)
@@ -82,6 +84,7 @@ module.exports = function (opts, callback) {
     }
 
     const child = dockerRun(image, {
+      version: DOCKER_VERSION,
       entrypoint: 'node',
       argv: ['-'].concat(argv),
       volumes,
