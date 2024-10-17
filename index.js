@@ -11,7 +11,7 @@ const unixify = require('unixify')
 const once = require('once')
 const path = require('path')
 
-const DOCKER_VERSION = 'v1.24';
+const DOCKER_VERSION = 'v1.24'
 
 module.exports = function (opts, callback) {
   if (typeof opts === 'function') {
