@@ -44,7 +44,7 @@ module.exports = function (opts, callback) {
       }
     }
 
-    dockerPull(image)
+    dockerPull(image, { version: 'v1.24' })
       .on('progress', progress)
       .on('error', callback)
       .on('end', end)
