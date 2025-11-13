@@ -19,14 +19,16 @@ for (const file of files) {
   fs.chmodSync(b, 0o644)
 }
 
-// Use node_modules of host to avoid a second install step
-fs.symlinkSync('/input/node_modules', path.join(cwd, 'node_modules'))
-
 const stdio = ['ignore', 2, 2]
-const res = cp.spawnSync('npx', ['--no-install', 'prebuildify', ...argv], { cwd, stdio })
+const installResult = cp.spawnSync('npm', ['install', '--ignore-scripts'], { cwd, stdio })
 
-if (res.status) process.exit(res.status)
-if (res.error) throw res.error
+if (installResult.status) process.exit(installResult.status)
+if (installResult.error) throw installResult.error
+
+const buildResult = cp.spawnSync('npx', ['--no-install', 'prebuildify', ...argv], { cwd, stdio })
+
+if (buildResult.status) process.exit(buildResult.status)
+if (buildResult.error) throw buildResult.error
 
 // Write tarball to stdout. With this approach we don't need
 // a writable volume and can avoid messing with permissions.
